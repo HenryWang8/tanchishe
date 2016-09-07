@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8" />
+		<title></title>
+		<style type="text/css">
+			*{margin: 0px;padding: 0px;}
+			#continer{border: 1px solid red;position: absolute;left: 400px;}
+			table,td{border: 1px solid green;}
+			#scoreRow{height: 30px;border: 2px solid #f0f;}
+			#score{color: #FF00FF;font-size: 26px;font-family: "微软雅黑";}
+		</style>
+		<script type="text/javascript">
+			var maxscope = 30;  //定义正方形区域的格数
+			var cellLength =15;  //定义正方形区域每格的边长
+			var interVal;  //定义定时器的接收值
+			var snakeArr = new Array();  //创建数组，用于存储蛇的身体坐标，格式为“x-y”
+			var foodPosition;  //定义食物的位置
+			var Position = "left";  //定义蛇移动的方向
+			var speed = 400;  //定义蛇移动的速度
+			var score = 0;  //定义一个分值
+			//初始化区域，需随着body加载
+			function init(){
+				for(i=0;i<maxscope;i++){
+					var row = document.createElement("tr");  //创建行
+					for(j=0;j<maxscope;j++){
+						var cell = document.createElement("td");  //创建列
+						cell.setAttribute("id",i+"-"+j);
+						cell.setAttribute("width",cellLength);
+						cell.setAttribute("height",cellLength);
+						row.appendChild(cell);
+					}
+					document.getElementById("body").appendChild(row);
+				}
+				snakeInit();
+				foodInit();
+				interVal = window.setInterval('snakeMove()',speed);
+			}
+			
+			//初始化蛇的位置
+			function snakeInit(){
+				var x = Math.round(Math.random()*(maxscope-1));  //0-29
+				var y = Math.round(Math.random()*(maxscope-1));  //0-29
+				var snakePos = x+"-"+y;
+				snakeDis(snakePos);
+				snakeArr.push(snakePos);  //通过蛇的数组记录蛇的坐标
+			}
+			//设置蛇的显示样式
+			function snakeDis(snakeTd){
+				document.getElementById(snakeTd).style.background = "#ff0";
+			}
+			//设置蛇尾的颜色为空的函数
+			function snakeDisReset(snakeTd){
+				document.getElementById(snakeTd).style.background = "";
+			}
+			
+			//初始化食物的位置，如果和蛇的位置一样，那么重新产生食物的位置
+			function foodInit(){
+				var x = Math.round(Math.random()*(maxscope-1));  //0-29
+				var y = Math.round(Math.random()*(maxscope-1));  //0-29
+				var foodPos = x+"-"+y;
+				//判断食物和蛇是否在同一点，如果是，重新产生初始化食物位置
+				for(var i=0;i<snakeArr.length;i++){
+					if(snakeArr[i] == foodPos){
+						x = Math.round(Math.random()*(maxscope-1));  //0-29
+						y = Math.round(Math.random()*(maxscope-1));  //0-29
+						foodPos = x+"-"+y;
+					}
+				}
+				foodDis(foodPos);
+				foodPosition = foodPos;
+			}
+			//设置食物的显示样式
+			function foodDis(foodTd){
+				document.getElementById(foodTd).style.background = "#0ff";
+			}
+			
+			//蛇进行移动的函数
+			function snakeMove(){
+				var foodX = foodPosition.split("-")[0];
+				var foodY = foodPosition.split("-")[1];
+				var snakeHeadX =parseInt(snakeArr[0].split("-")[0]);
+				var snakeHeadY =parseInt(snakeArr[0].split("-")[1]);
+				
+				switch(Position){
+					case "left":
+						snakeHeadY-=1;
+						break;
+					case "right":
+						snakeHeadY+=1
+						break;
+					case "up":
+						snakeHeadX-=1;
+						break;
+					case "down":
+						snakeHeadX+=1;
+						break;
+					
+				}
+				//蛇走路进行四种判断：遇到食物  墙壁  自己身体  正常走
+				if(snakeHeadX<0||snakeHeadX>maxscope-1||snakeHeadY<0||snakeHeadY>maxscope-1){
+					gameOver();
+				}else if(snakeHeadX == foodX&&snakeHeadY == foodY){
+					snakeArr.unshift(snakeHeadX+"-"+snakeHeadY);  //在蛇头添加一个长度
+					snakeDis(snakeArr[0]);  //设置所添加的长度的颜色让其显示出来
+					foodInit();  //从新产生食物
+					score+=10;
+					document.getElementById("score").innerText = score;
+				}else if(checkEnd(snakeHeadX,snakeHeadY)){
+					gameOver();
+				}else{
+					snakeArr.unshift(snakeHeadX+"-"+snakeHeadY);  //从蛇的数组头部插入数据
+					snakeDis(snakeArr[0]);  //展示新的蛇的头部
+					snakeDisReset(snakeArr.pop());  //从数组中释放蛇的尾部，同时设置这个td的样式
+				}
+			}
+			//键盘控制方向的函数
+			function movePos(){
+				switch(event.keyCode){
+					case 37:
+						if(Position != "right")Position = "left";
+						break;
+					case 38:
+						if(Position != "down")Position = "up";
+						break;
+					case 39:
+						if(Position != "left")Position = "right";
+						break;
+					case 40:
+						if(Position != "up")Position = "down";
+						break;
+					default:
+				}
+			}
+			//游戏结束是执行的函数
+			function gameOver(){
+				alert("gave over!");	
+				window.clearInterval(interVal);
+			}
+			//判断蛇是否碰到自己的身体
+			function checkEnd(x,y){
+				var temp = x+"-"+y;
+				for(var m=0;m<snakeArr.length;m++){
+					if(temp == snakeArr[m]){
+						return true;
+					}else{
+						return false;
+					}
+				}
+			}
+			
+		</script>
+	</head>
+	<body onload="init()"onkeydown="movePos()">
+		<table id="continer">
+			<thead id="head">
+				<tr>
+					<td id="scoreRow" colspan="30"><label id="score">00</label></td>
+				</tr>
+			</thead>
+			<tbody id="body">
+			</tbody>
+		</table>
+	</body>
+</html>
